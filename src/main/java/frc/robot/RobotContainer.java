@@ -21,7 +21,12 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.elevator.states.DownState;
 import frc.robot.subsystems.elevator.states.IdleState;
+import frc.robot.subsystems.elevator.states.PrintState;
 import frc.robot.subsystems.elevator.states.UpState;
+import frc.robot.subsystems.outtake.OuttakeSubsystem;
+import frc.robot.subsystems.outtake.States.MoveState;
+import frc.robot.subsystems.outtake.States.NoMoveState;
+import frc.robot.subsystems.outtake.States.UnMoveState;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -41,6 +46,7 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     ElevatorSubsystem elevator;
+    OuttakeSubsystem outtake;
 
     public RobotContainer() {
         initializeSubsystems();
@@ -50,10 +56,12 @@ public class RobotContainer {
 
     private void initializeSubsystems() {
         elevator = ElevatorSubsystem.getInstance();
+        outtake = OuttakeSubsystem.getInstance();
     }
 
     private void setDefaultCommands() {
-        CommandScheduler.getInstance().setDefaultCommand(elevator, new IdleState());
+        CommandScheduler.getInstance().setDefaultCommand(elevator, new PrintState());
+        CommandScheduler.getInstance().setDefaultCommand(outtake, new NoMoveState());
     }
 
     private void configureBindings() {
@@ -62,9 +70,9 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(joystick.getLeftY() * MaxSpeed*0.25) // Drive forward with negative Y (forward)
-                    .withVelocityY(joystick.getLeftX() * MaxSpeed*0.25) // Drive left with negative X (left)
-                    .withRotationalRate(joystick.getRightX() * MaxAngularRate*0.3) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(joystick.getLeftY() * MaxSpeed*0.5) // Drive forward with negative Y (forward)
+                    .withVelocityY(joystick.getLeftX() * MaxSpeed*0.5) // Drive left with negative X (left)
+                    .withRotationalRate(joystick.getRightX() * MaxAngularRate*0.5) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -76,6 +84,14 @@ public class RobotContainer {
 
         Trigger descend = joystick.povDown().whileTrue(
             new DownState().repeatedly()
+        );
+
+        Trigger autoInjurer = joystick.R2().whileTrue(
+            new MoveState().repeatedly()
+        );
+
+        Trigger undoButton = joystick.L2().whileTrue(
+            new UnMoveState().repeatedly()
         );
     }
 
